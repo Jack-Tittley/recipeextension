@@ -3,6 +3,57 @@ document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('recipeModal');
     const modalContent = document.getElementById('modalContent');
     const closeModal = document.querySelector('.close-modal');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importInput = document.getElementById('importInput');
+
+    exportBtn.addEventListener('click', exportRecipes);
+    importBtn.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', importRecipes);
+
+    function exportRecipes() {
+        chrome.storage.sync.get(['bookmarks'], function (result) {
+            const bookmarks = result.bookmarks || [];
+            const dataStr = JSON.stringify(bookmarks, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'recipe_bookmarks.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        });
+    }
+
+    function importRecipes(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const bookmarks = JSON.parse(e.target.result);
+                    if (Array.isArray(bookmarks)) {
+                        // Ask for confirmation before importing
+                        if (confirm('This will replace all existing recipes. Continue?')) {
+                            chrome.storage.sync.set({ bookmarks }, function() {
+                                alert('Recipes imported successfully!');
+                                renderBookmarks();
+                            });
+                        }
+                    } else {
+                        alert('Invalid file format. Please use a valid recipe bookmarks JSON file.');
+                    }
+                } catch (error) {
+                    alert('Error reading file: Please make sure it\'s a valid JSON file');
+                }
+            };
+            reader.readAsText(file);
+        }
+        // Reset the input so the same file can be imported again if needed
+        event.target.value = '';
+    }
+    
    
 
 
@@ -72,7 +123,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const card = document.createElement('div');
         card.classList.add('bookmark-card');
         card.dataset.index = index; 
-
+        const deleteBtn = document.createElement('button');
+        deleteBtn.classList.add('delete-btn');
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Are you sure you want to delete this recipe?')) {
+                const cardIndex = parseInt(card.dataset.index);
+                deleteBookmark(cardIndex);
+            }
+        };
+        card.appendChild(deleteBtn);
         const favoriteIcon = document.createElement('i');
         favoriteIcon.classList.add('fas', 'fa-star', 'favorite-icon');
         if (bookmark.favorite) {
@@ -83,6 +144,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const cardIndex = parseInt(card.dataset.index);
             toggleFavorite(cardIndex);
         };
+
+        
 
         
         const title = document.createElement('h2');
@@ -158,6 +221,17 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    
+function deleteBookmark(index) {
+    chrome.storage.sync.get(['bookmarks'], function (result) {
+        const bookmarks = result.bookmarks || [];
+        bookmarks.splice(index, 1);
+        chrome.storage.sync.set({ bookmarks }, function() {
+            renderBookmarks();
+        });
+    });
+}
 
     function showRecipeDetails(recipe) {
         modalContent.innerHTML = `
