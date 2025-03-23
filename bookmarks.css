@@ -3,65 +3,24 @@ body {
     margin: 0;
     padding: 20px;
     background-color: #f5f5f5;
-    font-size: 16px; /* Base font size increased for readability */
 }
 
-.bookmark-card {
-    background: white;
-    padding: 20px; /* Increased from 15px for more space */
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    width: 250px;
-    flex: 1 0 250px;
-    max-width: calc(33.333% - 1rem);
-    position: relative;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    
 }
 
-.bookmark-card h2 {
-    margin-top: 0;
+h1 {
     color: #333;
-    font-size: 1.4em; /* Increased from 1.2em for better readability */
+    text-align: center;
 }
 
-.note-textarea {
-    width: 100%;
-    margin-bottom: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    resize: vertical;
-    min-height: 80px; /* Increased from 60px for better input area */
-    font-size: 16px; /* Added for readability */
-}
-
-.modal-content {
-    background-color: white;
-    margin: 5% auto;
-    padding: 25px; /* Increased from 20px for more space */
-    border-radius: 8px;
-    width: 90%; /* Increased from 80% for better use of screen space */
-    max-width: 1000px;
-    max-height: 85vh; /* Slightly increased from 80vh */
-    overflow-y: auto;
-    position: relative;
-    font-size: 16px; /* Base font size for modal content */
-}
-
-.modal-content h2 {
-    font-size: 1.6em; /* Larger heading in modal */
-}
-
-.modal-content h3 {
-    font-size: 1.3em; /* Larger subheading in modal */
-}
-
-.modal-content p, .modal-content li {
-    font-size: 1em; /* Consistent with base size (16px) */
-}
-
-.text {
+.text{
     margin-bottom: 10px;
     white-space: pre-wrap;
-    font-size: 16px; /* Explicitly set for instructions */
+        
+
 }
 
 .bookmark-sections-container {
@@ -199,40 +158,6 @@ body {
     background-color: rgba(0,0,0,0.5);
     z-index: 1000;
     overflow-y: auto;
-}
-
-@media (max-width: 768px) {
-    .bookmark-card {
-        max-width: calc(50% - 1rem);
-        padding: 15px; /* Slightly reduced padding for smaller screens */
-    }
-    .modal-content {
-        width: 95%; /* Nearly full width on tablets */
-        padding: 20px;
-    }
-}
-
-@media (max-width: 480px) {
-    .bookmark-card {
-        max-width: 100%;
-        padding: 10px; /* Further reduced for mobile */
-    }
-    .modal-content {
-        width: 100%; /* Full width on mobile */
-        margin: 0; /* Remove margin to use full screen */
-        padding: 15px;
-        max-height: 90vh; /* Maximize vertical space */
-        border-radius: 0; /* Remove rounding for edge-to-edge look */
-    }
-    .modal-content h2 {
-        font-size: 1.4em; /* Slightly smaller but still readable */
-    }
-    .modal-content h3 {
-        font-size: 1.2em;
-    }
-    .close-modal {
-        font-size: 20px; /* Slightly smaller for mobile */
-    }
 }
 
 .delete-btn {
