@@ -101,7 +101,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     
     function extractJSONLDRecipe() {
-       
+        const currentUrl = window.location.href;
+        const isGlutenFreeSite = currentUrl.includes('glutenfreecuppatea.co.uk');
+        const isBBCGoodFood = currentUrl.includes('bbcgoodfood.com');
+        
+        if (!isGlutenFreeSite && !isBBCGoodFood) {
+            return null;
+        }
+
         const scripts = document.querySelectorAll('script[type="application/ld+json"]');
         let recipeData = null;
 
@@ -109,47 +116,79 @@ document.addEventListener('DOMContentLoaded', function () {
             try {
                 const json = JSON.parse(script.textContent);
 
-                // Handle arrays at the top level (some pages might wrap data in an array)
-                const jsons = Array.isArray(json) ? json : [json];
+                if (isGlutenFreeSite) {
+                    // Handle glutenfreecuppatea.co.uk structure
+                    if (json['@graph']) {
+                        const recipeNode = json['@graph'].find(node => node['@type'] === 'Recipe');
+                        if (recipeNode) {
+                            recipeData = {
+                                name: recipeNode.name || '',
+                                prepTime: recipeNode.prepTime || 'Not specified',
+                                cookTime: recipeNode.cookTime || 'Not specified',
+                                totalTime: recipeNode.totalTime || 'Not specified',
+                                recipeIngredient: recipeNode.recipeIngredient || [],
+                                recipeInstructions: []
+                            };
 
-                jsons.forEach(item => {
-                    // Check if the JSON-LD matches the schema.org Recipe structure
-                    if (item['@type'] === 'Recipe') {
-                        recipeData = {
-                            name: item.name || '',
-                            prepTime: item.prepTime || 'Not specified',
-                            cookTime: item.cookTime || 'Not specified',
-                            totalTime: item.totalTime || 'Not specified',
-                            recipeIngredient: item.recipeIngredient || [],
-                            recipeInstructions: []
-                        };
-
-                        const instructions = item.recipeInstructions;
-
-                        // Handle different types of recipeInstructions
-                        if (Array.isArray(instructions)) {
-                            recipeData.recipeInstructions = instructions.map(step => {
-                                if (typeof step === 'string') {
-                                    return step;
-                                } else if (typeof step === 'object' && step.text) {
-                                    return step.text;
-                                } else {
-                                    return '';
-                                }
-                            });
-                        } else if (typeof instructions === 'string') {
-                            recipeData.recipeInstructions = [instructions];
-                        } else {
-                            recipeData.recipeInstructions = ['No instructions available'];
+                            // Handle instructions which might be in sections
+                            if (Array.isArray(recipeNode.recipeInstructions)) {
+                                const instructions = [];
+                                recipeNode.recipeInstructions.forEach(section => {
+                                    if (section['@type'] === 'HowToSection') {
+                                        // Add section name as a header
+                                        instructions.push(`## ${section.name}`);
+                                        // Add steps from this section
+                                        section.itemListElement.forEach(step => {
+                                            if (step.text) {
+                                                instructions.push(step.text);
+                                            }
+                                        });
+                                    } else if (typeof section === 'string') {
+                                        instructions.push(section);
+                                    }
+                                });
+                                recipeData.recipeInstructions = instructions;
+                            }
                         }
                     }
-                });
+                } else if (isBBCGoodFood) {
+                    // Existing BBC Good Food handling
+                    const jsons = Array.isArray(json) ? json : [json];
+                    jsons.forEach(item => {
+                        if (item['@type'] === 'Recipe') {
+                            recipeData = {
+                                name: item.name || '',
+                                prepTime: item.prepTime || 'Not specified',
+                                cookTime: item.cookTime || 'Not specified',
+                                totalTime: item.totalTime || 'Not specified',
+                                recipeIngredient: item.recipeIngredient || [],
+                                recipeInstructions: []
+                            };
+
+                            const instructions = item.recipeInstructions;
+                            if (Array.isArray(instructions)) {
+                                recipeData.recipeInstructions = instructions.map(step => {
+                                    if (typeof step === 'string') {
+                                        return step;
+                                    } else if (typeof step === 'object' && step.text) {
+                                        return step.text;
+                                    } else {
+                                        return '';
+                                    }
+                                });
+                            } else if (typeof instructions === 'string') {
+                                recipeData.recipeInstructions = [instructions];
+                            } else {
+                                recipeData.recipeInstructions = ['No instructions available'];
+                            }
+                        }
+                    });
+                }
             } catch (e) {
                 console.error('Error parsing JSON-LD:', e);
             }
         });
 
-        // Return the extracted recipe data, if any
         return recipeData;
     }
 });
